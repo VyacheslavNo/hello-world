@@ -1,90 +1,73 @@
 import pandas as pd
-import numpy as np
-from pyparsing import *
+from pyparsing import Word, Optional, alphas, nums
 
 data = pd.read_csv('adventum2.csv', skiprows=7, header=None, error_bad_lines=False, warn_bad_lines=False)
-ccc = {}
-
-N_string = 6
-
-iii = 0
-while iii < len(data):
-########################################################
-    s = data.loc[iii].values[0]
-    # парсим первый столбец
-    source = Word(alphas + '.' + '(' + ')')
-    channel = Word(alphas + '(' + ')')
-    viraj = source + '/' + channel
-    fullviraj = viraj + Optional('>' + viraj) + Optional('>' + viraj) + Optional('>' + viraj) + Optional('>' + viraj) + Optional('>' + viraj) + Optional('>' + viraj) + Optional('>' + viraj) + Optional('>' + viraj) + Optional('>' + viraj) + Optional('>' + viraj) + Optional('>' + viraj) + Optional('>' + viraj) + Optional('>' + viraj) + Optional('>' + viraj) + Optional('>' + viraj) + Optional('>' + viraj) + Optional('>' + viraj) + Optional('>' + viraj) + Optional('>' + viraj) + Optional('>' + viraj) + Optional('>' + viraj) + Optional('>' + viraj) + Optional('>' + viraj) + Optional('>' + viraj) + Optional('>' + viraj) + Optional('>' + viraj) + Optional('>' + viraj) + Optional('>' + viraj) + Optional('>' + viraj) + Optional('>' + viraj) + Optional('>' + viraj) + Optional('>' + viraj) + Optional('>' + viraj) + Optional('>' + viraj) + Optional('>' + viraj) + Optional('>' + viraj) + Optional('>' + viraj) + Optional('>' + viraj) + Optional('>' + viraj) + Optional('>' + viraj) + Optional('>' + viraj) + Optional('>' + viraj) + Optional('>' + viraj) + Optional('>' + viraj) + Optional('>' + viraj) + Optional('>' + viraj) + Optional('>' + viraj) + Optional('>' + viraj) + Optional('>' + viraj)
-    b = fullviraj.parseString(s).asList()
-    bb = []
+final_dict = {}
+line_number = 0
+while line_number < len(data):
+    
+    # парсинг строки из первого столбца
+    column_1 = data.loc[line_number].values[0]
+    line = Word(alphas + '.' + '(' + ')') + '/' + Word(alphas + '(' + ')')
+    full_line = line + Optional('>' + line) + Optional('>' + line) + Optional('>' + line) + Optional('>' + line) + Optional('>' + line) + Optional('>' + line) + Optional('>' + line) + Optional('>' + line) + Optional('>' + line) + Optional('>' + line) + Optional('>' + line) + Optional('>' + line) + Optional('>' + line) + Optional('>' + line) + Optional('>' + line) + Optional('>' + line) + Optional('>' + line) + Optional('>' + line) + Optional('>' + line) + Optional('>' + line) + Optional('>' + line) + Optional('>' + line) + Optional('>' + line) + Optional('>' + line) + Optional('>' + line) + Optional('>' + line) + Optional('>' + line) + Optional('>' + line) + Optional('>' + line) + Optional('>' + line) + Optional('>' + line) + Optional('>' + line) + Optional('>' + line) + Optional('>' + line) + Optional('>' + line) + Optional('>' + line) + Optional('>' + line) + Optional('>' + line) + Optional('>' + line) + Optional('>' + line) + Optional('>' + line) + Optional('>' + line) + Optional('>' + line) + Optional('>' + line) + Optional('>' + line) + Optional('>' + line) + Optional('>' + line) + Optional('>' + line) + Optional('>' + line)
+    s_c = full_line.parseString(column_1).asList()
+    
+    # парсинг строки из третьего столбца
+    column_3 = data.loc[line_number].values[2]
+    line = Word(nums)
+    full_line = Optional(line + '\xa0') + Optional(line + '\xa0') + Optional(line + '\xa0') + Optional(line + '\xa0') + line + ',' + line
+    prices = full_line.parseString(column_3)
+    
+    # Запись в source_channel только нужных элементов из s_c
+    source_channel = []
     i = 0
-    while i < (len(b)+1)/2: # Удалим ненеужные элементы из строки
-        bb.append(b[i*2])
+    while i < (len(s_c)+1)/2:
+        source_channel.append(s_c[i*2])
         i = i + 1
-    #print(bb)
-    cpm = 'cpm'
-    cpc = 'cpc'
-    referral = 'referral'
-    c = {}
+    
+    # подсчет интересующих нас элементов в строке и запись результатов в словарь
+    dict = {}
     i = 0
-    kolvo_platnix = 0
-    while i < len(bb): # определяем сколько в строке платных элементов и заполняем словарь
-        if bb[i]==cpm:
-            st = bb[i-1] + '/' + bb[i]
-            c[st] = c.setdefault(st, 0) + 1
-            kolvo_platnix = kolvo_platnix +1
-        elif bb[i]==cpc:
-            st = bb[i-1] + '/' + bb[i]
-            c[st] = c.setdefault(st, 0) + 1
-            kolvo_platnix = kolvo_platnix +1
-        elif bb[i]==referral:
-            st = bb[i-1] + '/' + bb[i]
-            c[st] = c.setdefault(st, 0) + 1
-            kolvo_platnix = kolvo_platnix + 1
+    number_conversion = 0
+    while i < len(source_channel):
+        if source_channel[i]=='cpm':
+            st = source_channel[i-1] + '/' + source_channel[i]
+            dict[st] = dict.setdefault(st, 0) + 1
+            number_conversion = number_conversion +1
+        elif source_channel[i]=='cpc':
+            st = source_channel[i-1] + '/' + source_channel[i]
+            dict[st] = dict.setdefault(st, 0) + 1
+            number_conversion = number_conversion +1
+        elif source_channel[i]=='referral':
+            st = source_channel[i-1] + '/' + source_channel[i]
+            dict[st] = dict.setdefault(st, 0) + 1
+            number_conversion = number_conversion + 1
         i = i + 1
-    #print(c)
-    #парсим бабло
-    string_price = data.loc[iii].values[2]
-    number = Word(nums)
-    line = Optional(number + '\xa0') + Optional(number + '\xa0') + Optional(number + '\xa0') + Optional(number + '\xa0') + number + ',' + number
-    prices = line.parseString(string_price)
+    
+    # преобразование строки из третьего столбца в число
     i = 0
     prices_str = ''
     while i < ((len(prices))-1)/2:
         prices_str = prices_str + prices[i*2]
         i = i + 1
     prices_str_float = float(prices_str) +  float(prices[i*2])/100
-    #print(string_price)
-    #print(prices_str_float)
-    if kolvo_platnix != 0:
-        price_onepart = prices_str_float/kolvo_platnix
+    
+    # вычисление доли заработка, приходящейся на один платный переход
+    if number_conversion != 0:
+        price_onepart = prices_str_float/number_conversion
     else:
         price_onepart = 0
-    keyss = c.keys()
-    #print(keyss)
-    for f in keyss:
-        c[f] = c[f]*price_onepart
-        if c[f] != 0:
-            ccc[f] = ccc.setdefault(f, 0) + c[f]
-    #print(c)
-    iii = iii + 1
-##############################################################
+        
+    # вычисление заработка каждого платного канала и запись результата в финальный словарь
+    for f in dict.keys():
+        dict[f] = dict[f]*price_onepart
+        if dict[f] != 0:
+            final_dict[f] = final_dict.setdefault(f, 0) + dict[f]
 
-#print(ccc)
-l = lambda x: x[1]
-ccc = sorted(ccc.items(), key=l, reverse=True)
-print(ccc)
+    line_number = line_number + 1
 
-
-
-
-
-#while i < len(c):
     
-#countRA = np.array([[1, 2, 3], [4, 5, 6]])
-#print(countRA[0][1])
-#print(bb.count(cpm), bb.count(cpc), bb.count(referral))
-
-
+l = lambda x: x[1]
+final_dict = sorted(final_dict.items(), key=l, reverse=True)
+print(final_dict)
 
